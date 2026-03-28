@@ -4,16 +4,16 @@ def analyze_log(log: str):
  if "failed login" in log:
   return{
      "threat": "Brute Force Attempt",
-     "severity": "High"
+     "severity": "HIGH"
 }
  elif "port scan" in log:
   return{
     "threat": "Reconnaissance Activity",
-    "Severity": "Medium"
+    "severity": "MEDIUM"
 }
 
  else:
   return{
-    "Threat": "Normal Activity",
-    "Severity": "LOW"
+    "threat": "Normal Activity",
+    "severity": "LOW"
 }

@@ -1,9 +1,9 @@
 from analyzer import analyze_log
-from ai_client import explain_log
+from ai_client import explain_log, clean_ai_response
 
 def process_log(log: str):
   rule_result = analyze_log(log)
-  ai_result = explain_log(log)
+  ai_result = clean_ai_response(explain_log(log))
 
 
   return{
