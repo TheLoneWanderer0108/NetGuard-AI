@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetGuard AI</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    textarea {
+      width: 60%;
+      height: 100px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #22c55e;
+      color: white;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      background: #1e293b;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: bold;
+      letter-spacing: 0.3px;
+      margin-left: 6px;
+    }
+
+    .severity-low {
+      background: #166534;
+      color: #dcfce7;
+    }
+
+    .severity-medium {
+      background: #92400e;
+      color: #ffedd5;
+    }
+
+    .severity-high {
+      background: #991b1b;
+      color: #fee2e2;
+    }
+  </style>
+</head>
+<body>
+
+<h1>NetGuard AI</h1>
+<p>Analyze security logs with AI</p>
+
+<textarea id="logInput" placeholder="Enter log here..."></textarea><br>
+<button onclick="analyzeLog()">Analyze</button>
+
+<div class="result" id="result" style="display:none;"></div>
+
+<script>
+function getSeverityClass(severity) {
+  const level = (severity || "").toUpperCase();
+  if (level === "HIGH") return "severity-high";
+  if (level === "MEDIUM") return "severity-medium";
+  return "severity-low";
+}
+
+async function analyzeLog() {
+  const log = document.getElementById("logInput").value;
+
+  const response = await fetch("/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ log })
+  });
+
+  const data = await response.json();
+  const severity = data.analysis.severity || "LOW";
+  const severityClass = getSeverityClass(severity);
+
+  const resultDiv = document.getElementById("result");
+  resultDiv.style.display = "block";
+
+  resultDiv.innerHTML = `
+    <h3>Threat: ${data.analysis.threat}</h3>
+    <p><strong>Severity:</strong><span class="severity-badge ${severityClass}">${severity}</span></p>
+    <p><strong>Suspicious:</strong> ${data.ai_explanation.is_suspicious}</p>
+    <p><strong>Reason:</strong> ${data.ai_explanation.reason}</p>
+    <p><strong>Recommended Action:</strong> ${data.ai_explanation.recommended_action}</p>
+  `;
+}
+</script>
+
+</body>
+</html>
