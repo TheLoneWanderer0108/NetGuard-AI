@@ -87,6 +87,10 @@ function getSeverityClass(severity) {
 async function analyzeLog() {
   const log = document.getElementById("logInput").value;
 
+  if (!log.trim()) {
+    return;
+  }
+
   const response = await fetch("/analyze", {
     method: "POST",
     headers: {
@@ -95,19 +99,38 @@ async function analyzeLog() {
     body: JSON.stringify({ log })
   });
 
-  const data = await response.json();
-  const severity = data.analysis.severity || "LOW";
-  const severityClass = getSeverityClass(severity);
-
   const resultDiv = document.getElementById("result");
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData.detail || "Analysis request failed";
+    resultDiv.style.display = "block";
+    resultDiv.innerHTML = `<p><strong>Error:</strong> ${message}</p>`;
+    return;
+  }
+
+  const data = await response.json();
+  const analysis = data.analysis || data.rule_based_analysis || {};
+  const aiExplanation = data.ai_explanation || data.ai_analysis || {};
+  const severity = analysis.severity || "LOW";
+  const severityClass = getSeverityClass(severity);
+  const threats = Array.isArray(analysis.threats) ? analysis.threats : [];
+  const threatItems = threats.length
+    ? threats.map((t) => `<li><strong>${t.threat}</strong> (${t.severity}) - confidence: ${t.confidence ?? "n/a"}, technique: ${t.technique || "n/a"}</li>`).join("")
+    : `<li>${analysis.threat || "No threat detected"}</li>`;
+  const confidence = analysis.confidence ?? "n/a";
+
   resultDiv.style.display = "block";
 
   resultDiv.innerHTML = `
-    <h3>Threat: ${data.analysis.threat}</h3>
+    <h3>Top Threat: ${analysis.threat || "Unknown"}</h3>
     <p><strong>Severity:</strong><span class="severity-badge ${severityClass}">${severity}</span></p>
-    <p><strong>Suspicious:</strong> ${data.ai_explanation.is_suspicious}</p>
-    <p><strong>Reason:</strong> ${data.ai_explanation.reason}</p>
-    <p><strong>Recommended Action:</strong> ${data.ai_explanation.recommended_action}</p>
+    <p><strong>Rule Confidence:</strong> ${confidence}</p>
+    <p><strong>Detected Threats:</strong></p>
+    <ul>${threatItems}</ul>
+    <p><strong>Suspicious:</strong> ${aiExplanation.is_suspicious ?? "unknown"}</p>
+    <p><strong>Reason:</strong> ${aiExplanation.reason || "No explanation provided"}</p>
+    <p><strong>Recommended Action:</strong> ${aiExplanation.recommended_action || "No action provided"}</p>
   `;
 }
 </script>

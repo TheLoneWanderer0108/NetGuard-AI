@@ -1,5 +1,7 @@
 import sys
-sys.path.append("../backend")
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent / "backend"))
 
 from main import process_log
 
